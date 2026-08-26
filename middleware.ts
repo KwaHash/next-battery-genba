@@ -40,19 +40,11 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { pathname, search } = request.nextUrl
+  const { pathname } = request.nextUrl
 
   if (!user && !isPublic(pathname)) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    url.search = ''
-    if (pathname !== '/') url.searchParams.set('next', `${pathname}${search}`)
-    return NextResponse.redirect(url)
-  }
-
-  if (user && pathname === '/login' && !request.nextUrl.searchParams.has('error')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/'
     url.search = ''
     return NextResponse.redirect(url)
   }
