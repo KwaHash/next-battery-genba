@@ -1,167 +1,98 @@
-# Next.js Skeleton Project
+# 現場アシスト
 
-A modern, production-ready Next.js skeleton application built with TypeScript, featuring a comprehensive UI component library, state management, and development tools.
+電気工事生産性OSの現場アシストをNext.jsで実装したものです。
+工事会社の社長・監督・職人が**毎日開く画面**で、材料の相談を入口にしています。
 
-## 🚀 Features
+---
 
-- **Next.js 14** with App Router
-- **TypeScript** for type safety
-- **Tailwind CSS** with custom design system
-- **shadcn/ui** component library with Radix UI primitives
-- **Redux Toolkit** for state management
-- **TanStack Query** for server state management
-- **Dark/Light theme** support with next-themes
-- **ESLint & Prettier** for code quality
-- **Husky** for git hooks
-- **HolyLoader** for loading indicators
+## 動かす
 
-## 🛠️ Tech Stack
-
-### Development Tools
-- **ESLint** - Code linting
-- **Prettier** - Code formatting
-- **Husky** - Git hooks
-- **TypeScript ESLint** - TypeScript linting
-
-## 📁 Project Structure
-
-```
-next-skeleton/
-├── app/                    # Next.js App Router
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Home page
-│   ├── providers.tsx      # App providers
-│   └── manifest.ts        # PWA manifest
-├── components/            # Reusable components
-│   ├── ui/               # shadcn/ui components
-│   ├── dialog/           # Dialog components
-│   ├── header/           # Navigation components
-│   └── ...               # Other components
-├── hooks/                # Custom React hooks
-├── lib/                  # Utility libraries
-│   ├── config.ts         # Environment configuration
-│   ├── fonts.ts          # Font configurations
-│   └── utils.ts          # Utility functions
-├── providers/            # React context providers
-├── stores/               # Redux store configuration
-├── styles/               # Global styles
-└── public/               # Static assets
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+ 
-- npm, yarn, pnpm, or bun
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd next-skeleton
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
-   # or
-   bun install
-   ```
-
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env.local
-   ```
-   
-   Configure the following variables:
-   ```env
-   NEXT_PUBLIC_APP_ENV=development
-   NEXT_PUBLIC_HOST=http://localhost:3000
-   ```
-
-4. **Run the development server**
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
-   # or
-   bun dev
-   ```
-
-## 📜 Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint with auto-fix
-- `npm run format` - Format code with Prettier
-- `npm run prepare` - Install Husky git hooks
-
-## 🎨 UI Components
-
-Use the shadcn/ui CLI to add new components:
+### 1. 環境変数
 
 ```bash
-npx shadcn@latest add <component-name>
+cp .env.example .env.local
 ```
 
-## 🔧 State Management
+Supabase プロジェクトの Settings → API から値を入れます。
 
-### Redux Toolkit
-- Global application state
-- Dialog management
-- Type-safe selectors and actions
+| 変数 | 用途 |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | 接続先 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | 現場側。RLS を通る |
+| `SUPABASE_SERVICE_ROLE_KEY` | **回答の生成だけ**に使う。クライアントへ渡さない |
 
-### TanStack Query
-- Server state management
-- Caching and synchronization
-- Background updates
+### 2. 起動
 
-## 🔍 Code Quality
+```bash
+npm install
+npm run dev
+```
 
-- **ESLint** configuration with TypeScript support
-- **Prettier** for consistent code formatting
-- **Husky** git hooks for pre-commit checks
-- **TypeScript** strict mode enabled
+`http://localhost:3000` を**スマホ幅**で開いてください。PC では端末枠の中に表示されます。
 
-## 🚀 Deployment
+---
 
-### Vercel (Recommended)
+## 画面
 
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Configure environment variables
-4. Deploy automatically
+| 画面 | パス | 何をするか |
+|---|---|---|
+| 今日の作業 | `/` | 予定・到着/開始/完了・通知・やること |
+| やること | `/todo` | 手動追加と、自動で出たものの消し込み |
+| 通知の設定 | `/reminders` | カレンダー連携と、通知の入り切り |
+| **材料を頼む** | `/material` | 一覧と「前回と同じものを頼む」 |
+| 写真を送る | `/material/new` | 写真 → 候補 → 数量 → 送信 |
+| 相談の内容 | `/material/[id]` | 回答カード・発注・納期変更の確認・転送 |
+| 現場写真 | `/photos`, `/photos/[siteId]` | 施工前／施工後／不具合で自動整理 |
+| 作業報告書 | `/report` | 写真と発注データから自動生成 |
+| お客様見積 | `/quote` | 発注データが入った状態から始まる |
+| 応援を頼む | `/help` | 成果物単位。赤・黄・緑の区分表示 |
+| 現場と履歴 | `/sites` | 現場ごとの材料・写真の件数 |
 
-### Other Platforms
+`/material` が入口です。ここが毎日使われるから、他が乗ります。
 
-The project can be deployed to any platform that supports Next.js:
+---
 
-- **Netlify**
-- **AWS Amplify**
-- **Railway**
-- **Docker** (with custom Dockerfile)
+## 実装で守っていること
 
-## 📚 Learn More
+### 回答はサーバ側でしか書けない（H-1）
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [shadcn/ui Documentation](https://ui.shadcn.com)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [Redux Toolkit Documentation](https://redux-toolkit.js.org)
-- [TanStack Query Documentation](https://tanstack.com/query)
+現場側が進められるのは `PENDING → SENT` まで。`ANSWERED` への遷移と `answer_*` の生成は
+`lib/genba/actions.ts` の `answerRequestOnServer` だけが行い、`canAutoAnswer` の
+5条件を通ったものしか書きません。
 
-## 🤝 Contributing
+**同じ制約を DB のトリガー（`guard_request_answer`）にも入れてあります。**
+アプリ側だけで守ると、キーが漏れた時点で 5条件も保安機器の除外も無効になるためです。
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+自動回答されなかったものは `SENT` のまま止まり、**止めた理由が画面に出ます**。
+「なぜ人が確認するのか」が見えないと運用されないためです。
+
+### 日付は Asia/Tokyo 固定、時計は注入できる（H-3）
+
+`lib/domain/clock.ts`。文字列比較と実行環境のローカル時刻に依存させていません。
+`toJstDate()` を使わずに `iso.slice(0, 10)` で済ませないでください。UTC 23:00 に
+作られた行が前日になります。
+
+### 資格区分は画面に出さない
+
+`REVIEW_REQUIRED` などの内部値は出しません。赤・黄・緑と日本語のラベルだけです。
+黄（責任者の確認待ち）は押せず、**サーバー側でも `canRequestHelp` で弾いています**。
+画面の if 文だけで隠すと裏口ができます。
+
+### 現場の入力条件（U-1〜U-7）
+
+- 本文 17px／主要ボタン 56px／一覧行 60px … `tailwind.config.ts` の
+  `touch-btn` / `touch-row` / `text-field` に固定。画面ごとに書き換えない
+- 数量はキーボードを出さない … `components/genba/qty-stepper.tsx`
+- 確認画面を挟まず、送信後に取り消せる … トーストの「取り消す」（8秒）
+- オフラインで押せる … `PENDING` で保存し、復帰時に `OfflineBar` が送る。冪等キー付き
+- 「前回と同じ」で1タップ … `/material` の再依頼
+- 出力は転送できる形 … `CopyButton`（共有シート／クリップボード）
+
+### そのほか
+
+- 全業務データに `tenant_id`。分離は RLS で行い、画面の if 文では隠さない
+- 監査ログは追記のみ。**拒否した操作も `DENIED:` 接頭辞で残す**
+- 写真・監査ログは物理削除できない（DB トリガー）。取り消しは `archived_at`
+- 写真の EXIF 位置情報は既定で除去する
+
+---
