@@ -2,13 +2,14 @@ import  { type MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: '',
-    short_name: '',
-    description: '',
+    name: '現場アシスト',
+    short_name: '現場アシスト',
+    description:
+      '工事会社が毎日開く画面。材料の相談・現場写真・作業報告書・見積・応援依頼。',
     start_url: '/',
-    display: 'fullscreen',
-    background_color: '#030712',
-    theme_color: '#030712',
+    display: 'standalone',
+    background_color: '#0b0b0c',
+    theme_color: '#0b0b0c',
     icons: [
       {
         src: '/favicon-16x16.png',
