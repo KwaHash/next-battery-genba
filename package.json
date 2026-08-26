@@ -1,5 +1,5 @@
 {
-  "name": "skeleton",
+  "name": "現場アシスト | 電気工事生産性",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -25,6 +25,8 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@reduxjs/toolkit": "^2.6.1",
+    "@supabase/ssr": "^0.12.5",
+    "@supabase/supabase-js": "^2.112.4",
     "@tanstack/react-query": "^5.69.0",
     "@tanstack/react-query-devtools": "^5.69.0",
     "class-variance-authority": "^0.7.1",
@@ -44,8 +46,11 @@
     "react-loading-indicators": "^1.0.0",
     "react-redux": "^9.2.0",
     "sass": "^1.86.0",
+    "server-only": "^0.0.1",
+    "sonner": "^2.0.8",
     "tailwind-merge": "^3.3.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
