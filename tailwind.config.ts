@@ -47,6 +47,7 @@ const config: Config = {
         success: {
           DEFAULT: 'hsl(var(--success))',
           foreground: 'hsl(var(--success-foreground))',
+          solid: 'hsl(var(--success-solid))',
         },
         warning: {
           DEFAULT: 'hsl(var(--warning))',
@@ -65,7 +66,6 @@ const config: Config = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
-      /* 現場の入力条件（U-1）を数値で固定する。個々の画面で書き換えない。 */
       spacing: {
         'touch-row': '60px',
         'touch-btn': '56px',
