@@ -46,7 +46,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className={notoSansJP.className}>
+      <body className={`${notoSansJP.className} ${notoSansJP.variable}`}>
         <HolyLoader color="hsl(25 100% 50%)" height="2px" easing="linear" />
         <Providers>
           <ConditionalLayout>{children}</ConditionalLayout>
