@@ -2,7 +2,6 @@ import { type Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import SitePhotosContent from '@/components/sections/genba/SitePhotosContent'
 import { getSite, listPhotos } from '@/lib/genba/queries'
-import { requireSession } from '@/lib/genba/tenant'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +15,6 @@ export default async function SitePhotosPage({
 }: {
   params: Promise<{ siteId: string }>;
 }) {
-  await requireSession()
   const { siteId } = await params
 
   const site = await getSite(siteId)
