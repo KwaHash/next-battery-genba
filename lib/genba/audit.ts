@@ -2,14 +2,6 @@ import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 
-/**
- * 監査ログ。
- *
- * **拒否した操作も記録する**（`DENIED:` 接頭辞）。ガードレール指標の根拠になる。
- * 追記のみ。物理削除できない（DB のトリガーで止めてある）。
- *
- * 書き込みは service_role で行う。利用者が自分の足跡を消せないようにするため。
- */
 export type AuditInput = {
   tenantId: string;
   actor: string;
