@@ -35,7 +35,7 @@ export function CopyButton({
   }
 
   return (
-    <Button type="button" variant={variant} size="field" onClick={share}>
+    <Button type="button" variant={variant} size="field" onClick={share} className='text-white'>
       {done ? (
         <Check className="mr-2 size-5" aria-hidden />
       ) : (
