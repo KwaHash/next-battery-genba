@@ -43,6 +43,7 @@ const config: Config = {
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
+          solid: 'hsl(var(--destructive-solid))',
         },
         success: {
           DEFAULT: 'hsl(var(--success))',
@@ -69,6 +70,16 @@ const config: Config = {
       spacing: {
         'touch-row': '60px',
         'touch-btn': '56px',
+      },
+      fontFamily: {
+        sans: [
+          'var(--font-noto-sans-jp)',
+          'Hiragino Kaku Gothic ProN',
+          'Yu Gothic',
+          'Meiryo',
+          'system-ui',
+          'sans-serif',
+        ],
       },
       fontSize: {
         field: ['17px', { lineHeight: '1.65' }],
