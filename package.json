@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint ./**/*.{ts,tsx} --fix",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "prepare": "husky install"
+    "prepare": "husky install || true"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
