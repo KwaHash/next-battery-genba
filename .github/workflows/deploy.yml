@@ -1,0 +1,172 @@
+name: Deploy Next-Battery-Genba Application
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.11.0"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify required build secrets
+        run: |
+          missing=0
+          for key in \
+            NEXT_PUBLIC_HOST \
+            NEXT_PUBLIC_SUPABASE_URL \
+            NEXT_PUBLIC_SUPABASE_ANON_KEY \
+            SUPABASE_SERVICE_ROLE_KEY; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing required secret: $key"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "One or more required secrets are empty."
+            exit 1
+          fi
+        env:
+          NEXT_PUBLIC_HOST: ${{ secrets.NEXT_PUBLIC_HOST }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_APP_ENV: production
+          NEXT_PUBLIC_HOST: ${{ secrets.NEXT_PUBLIC_HOST }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy
+          cp -r .next deploy/
+          rm -rf deploy/.next/cache   # webpack cache is unused by `next start`; shipping it only adds bloat/risk
+          cp -r public deploy/
+          cp -r app deploy/
+          cp -r components deploy/
+          cp -r hooks deploy/
+          cp -r lib deploy/
+          cp -r providers deploy/
+          cp -r styles deploy/
+          cp -r types deploy/
+          cp package.json deploy/
+          cp package-lock.json deploy/
+          cp next.config.mjs deploy/
+          cp tsconfig.json deploy/
+          cp tailwind.config.ts deploy/
+          cp postcss.config.mjs deploy/
+          cp components.json deploy/
+          cp middleware.ts deploy/
+          tar -czf deploy.tar.gz -C deploy .
+
+      - name: Deploy to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "deploy.tar.gz"
+          target: "/tmp"
+
+      - name: Extract and deploy on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+            cd /var/www/next-battery-genba
+
+            # Match the CI build's Node major (22) at runtime.
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && nvm use 22 >/dev/null 2>&1 || true
+            echo "Using Node $(node -v)"
+
+            # Extract into a clean staging dir on the SAME filesystem as the app,
+            # never over the live tree. A partial/interrupted extract on top of
+            # the running .next is exactly what produces a mixed build -- page
+            # bundles from build A, action manifest from build B -- which fails
+            # every Server Action call with "Failed to find Server Action".
+            STAGE=/var/www/.next-battery-genba-staging
+            rm -rf "$STAGE" && mkdir -p "$STAGE"
+            echo "Extracting new deployment to staging..."
+            tar -xzf /tmp/deploy.tar.gz -C "$STAGE"
+
+            # Atomically swap .next so the runtime only ever sees one whole build.
+            echo "Swapping in new .next build..."
+            rm -rf .next.old
+            [ -d .next ] && mv .next .next.old
+            mv "$STAGE/.next" .next
+
+            # Sync the rest of the app tree (source dirs are read at build time
+            # only, but keep them current for parity/debugging).
+            for d in public app components hooks lib providers styles types; do
+              [ -d "$STAGE/$d" ] && { rm -rf "$d"; cp -r "$STAGE/$d" "$d"; }
+            done
+            for f in package.json package-lock.json next.config.mjs tsconfig.json tailwind.config.ts postcss.config.mjs components.json middleware.ts; do
+              [ -f "$STAGE/$f" ] && cp -f "$STAGE/$f" "$f"
+            done
+
+            # Install production dependencies
+            echo "Installing dependencies..."
+            npm ci --omit=dev
+
+            # Gate: refuse to serve a mixed build. Every server action id
+            # referenced in the manifest must also exist somewhere in the
+            # built server output.
+            echo "Verifying build consistency..."
+            if [ -f .next/server/server-reference-manifest.json ]; then
+              missing=0
+              for id in $(grep -oE '"[0-9a-f]{40}"' .next/server/server-reference-manifest.json | tr -d '"' | sort -u); do
+                if ! grep -rq "$id" .next/server; then
+                  echo "::error::Mixed build detected (server action id $id missing from build output)."
+                  missing=1
+                fi
+              done
+              if [ "$missing" -ne 0 ]; then
+                echo "Rolling back."
+                rm -rf .next && [ -d .next.old ] && mv .next.old .next
+                exit 1
+              fi
+            fi
+
+            # Restart as a single fork-mode instance. Delete first so no stale
+            # process keeps an old in-memory action manifest and we never double-run.
+            echo "Restarting PM2 application..."
+            pm2 delete next-battery-genba-app 2>/dev/null || true
+            pm2 start npm --name "next-battery-genba-app" -- start
+            pm2 save
+
+            # Cleanup
+            rm -rf "$STAGE" .next.old
+            rm -f /tmp/deploy.tar.gz
+
+            echo "Deployment completed successfully!"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf deploy deploy.tar.gz
